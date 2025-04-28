@@ -962,7 +962,7 @@ export class PosStore extends Reactive {
      * @returns {name: string, id: int, role: string}
      */
     get_cashier() {
-        this.user.role = this.user.raw.role;
+        this.user._role = this.user.raw.role;
         return this.user;
     }
     get_cashier_user_id() {
@@ -1210,7 +1210,8 @@ export class PosStore extends Reactive {
                     .forEach((order) => (order.session_id = this.session));
             }
 
-            this.clearPendingOrder();
+            // Remove only synced orders from the pending orders
+            orders.forEach((o) => this.removePendingOrder(o));
             return newData["pos.order"];
         } catch (error) {
             if (options.throw) {
@@ -2111,6 +2112,11 @@ export class PosStore extends Reactive {
                 return false;
             }
         }
+        payment.qrPaymentData = {
+            name: payment.payment_method_id.name,
+            amount: this.env.utils.formatCurrency(payment.amount),
+            qrCode: qr,
+        };
         return await ask(
             this.env.services.dialog,
             {
@@ -2121,7 +2127,10 @@ export class PosStore extends Reactive {
             },
             {},
             QRPopup
-        );
+        ).then((result) => {
+            payment.qrPaymentData = undefined;
+            return result;
+        });
     }
 
     get isTicketScreenShown() {
