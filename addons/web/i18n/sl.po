@@ -8,13 +8,14 @@
 # Wil Odoo, 2025
 # Tadej Lupšina <tadej@hbs.si>, 2025
 # Thoma Schillebeeckx, 2025
+# Jan Zorko, 2025
 # Aleš Pipan, 2025
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-14 20:48+0000\n"
+"POT-Creation-Date: 2025-05-16 20:37+0000\n"
 "PO-Revision-Date: 2024-09-25 09:42+0000\n"
 "Last-Translator: Aleš Pipan, 2025\n"
 "Language-Team: Slovenian (https://app.transifex.com/odoo/teams/41243/sl/)\n"
@@ -1797,6 +1798,8 @@ msgid ""
 "Company tagline, which is included in a printed document's header or footer "
 "(depending on the selected layout)."
 msgstr ""
+"Slogan podjetja, ki je vključen v glavo ali nogo natisnjenega dokumenta "
+"(odvisno od izbrane postavitve)."
 
 #. module: web
 #. odoo-javascript
@@ -2216,7 +2219,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/web/static/src/views/fields/properties/property_definition.js:0
 msgid "Decimal"
-msgstr ""
+msgstr "Decimalno"
 
 #. module: web
 #. odoo-javascript
@@ -3304,13 +3307,6 @@ msgstr ""
 msgid ""
 "If checked, users won't be able to create records through the autocomplete "
 "dropdown at all."
-msgstr ""
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/views/fields/domain/domain_field.js:0
-#, python-format
-msgid "If true, non-literals are accepted"
 msgstr ""
 
 #. module: web
@@ -6477,20 +6473,6 @@ msgstr ""
 msgid ""
 "The content of this cell is too long for an XLSX file (more than %s "
 "characters). Please use the CSV format for this export."
-msgstr ""
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/views/fields/domain/domain_field.js:0
-#, python-format
-msgid "The domain involves non-literals. Their evaluation might fail."
-msgstr ""
-
-#. module: web
-#. odoo-javascript
-#: code:addons/web/static/src/views/fields/domain/domain_field.js:0
-#, python-format
-msgid "The domain should not involve non-literals"
 msgstr ""
 
 #. module: web
@@ -15487,7 +15469,7 @@ msgstr "je med"
 #. odoo-javascript
 #: code:addons/web/static/src/core/tree_editor/tree_editor_operator_editor.js:0
 msgid "is in"
-msgstr ""
+msgstr "je med"
 
 #. module: web
 #. odoo-javascript
@@ -15499,7 +15481,7 @@ msgstr "ni"
 #. odoo-javascript
 #: code:addons/web/static/src/core/tree_editor/tree_editor_operator_editor.js:0
 msgid "is not in"
-msgstr ""
+msgstr "ni vsebovano v"
 
 #. module: web
 #. odoo-javascript

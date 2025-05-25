@@ -90,7 +90,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:pos_loyalty.field_res_partner__loyalty_card_count
 #: model:ir.model.fields,field_description:pos_loyalty.field_res_users__loyalty_card_count
 msgid "Active loyalty cards"
-msgstr ""
+msgstr "Aktif sadakat kartları"
 
 #. module: pos_loyalty
 #. odoo-javascript
@@ -211,7 +211,7 @@ msgstr "Kodu girin"
 #. odoo-javascript
 #: code:addons/pos_loyalty/static/src/overrides/components/product_screen/order_summary/order_summary.js:0
 msgid "Enter Gift Card Number"
-msgstr ""
+msgstr "Hediye Kartı Numarasını Girin"
 
 #. module: pos_loyalty
 #. odoo-javascript
@@ -249,6 +249,8 @@ msgid ""
 "Gift Card: %s\n"
 "Balance: %s"
 msgstr ""
+"Hediye Kartı: %s\n"
+"Bakiye: %s"
 
 #. module: pos_loyalty
 #. odoo-javascript
@@ -347,13 +349,13 @@ msgstr "Bu kuponla ödül talep edilemez."
 #. odoo-javascript
 #: code:addons/pos_loyalty/static/src/overrides/components/control_buttons/control_buttons.js:0
 msgid "No valid eWallet found"
-msgstr ""
+msgstr "Geçerli bir eCüzdan bulunamadı"
 
 #. module: pos_loyalty
 #. odoo-python
 #: code:addons/pos_loyalty/models/pos_order.py:0
 msgid "Onsite %s"
-msgstr ""
+msgstr "Yerinde %s"
 
 #. module: pos_loyalty
 #. odoo-javascript
@@ -490,13 +492,13 @@ msgstr "Program seçin"
 #. odoo-javascript
 #: code:addons/pos_loyalty/static/src/overrides/components/product_screen/order_summary/order_summary.xml:0
 msgid "Sell physical gift card?"
-msgstr ""
+msgstr "Fiziksel hediye kartı satılsın mı?"
 
 #. module: pos_loyalty
 #. odoo-javascript
 #: code:addons/pos_loyalty/static/src/overrides/components/product_screen/order_summary/order_summary.js:0
 msgid "Sell/Manage physical gift card"
-msgstr ""
+msgstr "Fiziksel hediye kartı satın / kartları yönetin"
 
 #. module: pos_loyalty
 #: model:product.template,name:pos_loyalty.simple_pen_product_template
@@ -546,7 +548,7 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/pos_loyalty/static/src/overrides/models/pos_store.js:0
 msgid "That promo code program is not yet valid."
-msgstr ""
+msgstr "Bu promosyon kodu programı henüz geçerli değil."
 
 #. module: pos_loyalty
 #. odoo-javascript
@@ -586,6 +588,8 @@ msgid ""
 "The reward \"%s\" contain an error in its domain, your domain must be "
 "compatible with the PoS client"
 msgstr ""
+"\"%s\" ödülünde alanla ilgili bir hata var, alanınızın Satış Noktası "
+"istemcisiyle uyumlu olması gerekir"
 
 #. module: pos_loyalty
 #: model:ir.model.fields,help:pos_loyalty.field_pos_order_line__reward_id
@@ -645,7 +649,7 @@ msgstr "Bunlar, bu kural için geçerli olan ürünlerdir."
 #. odoo-javascript
 #: code:addons/pos_loyalty/static/src/overrides/components/product_screen/order_summary/order_summary.js:0
 msgid "This Gift card has already been sold."
-msgstr ""
+msgstr "Bu Hediye Kartı zaten satılmış."
 
 #. module: pos_loyalty
 #. odoo-python
@@ -669,7 +673,7 @@ msgstr "Bu kupon mevcut fiyat listesinde yoktur."
 #. odoo-python
 #: code:addons/pos_loyalty/models/pos_config.py:0
 msgid "This coupon is not yet valid (%s)."
-msgstr ""
+msgstr "Bu kupon henüz geçerli değil (%s)."
 
 #. module: pos_loyalty
 #. odoo-javascript
@@ -690,7 +694,7 @@ msgstr "Bu, PoS'tan oluşturulan hediye kartlarını yazdırmak için kullanıl�
 #. odoo-python
 #: code:addons/pos_loyalty/models/pos_config.py:0
 msgid "This programs requires a code to be applied."
-msgstr ""
+msgstr "Bu programın uygulanabilmesi için bir kod gereklidir."
 
 #. module: pos_loyalty
 #. odoo-python
@@ -819,4 +823,4 @@ msgstr "bitiş süresi yok"
 #. odoo-javascript
 #: code:addons/pos_loyalty/static/src/overrides/models/pos_order.js:0
 msgid "the gift cards"
-msgstr ""
+msgstr "hediye kartları"
