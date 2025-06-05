@@ -774,7 +774,7 @@ msgstr "Crno"
 #. odoo-javascript
 #: code:addons/product/static/src/js/product_attribute_value_list.js:0
 msgid "Bye-bye, record!"
-msgstr ""
+msgstr "Pa-pa, zapisu!"
 
 #. module: product
 #: model:product.template,name:product.product_product_10_product_template
@@ -3302,7 +3302,7 @@ msgstr "Interna oznaka '%s' već postoji."
 #. odoo-python
 #: code:addons/product/models/product_product.py:0
 msgid "The Reference '%s' already exists."
-msgstr ""
+msgstr "Vezna oznaka '%s' već postoji."
 
 #. module: product
 #. odoo-python
