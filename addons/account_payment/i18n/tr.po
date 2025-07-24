@@ -138,7 +138,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/account_payment/wizards/payment_link_wizard.py:0
 msgid "A discount will be applied if the customer pays before %s included."
-msgstr ""
+msgstr "Müşteri %s tarihine kadar ödeme yaparsa indirim uygulanacaktır."
 
 #. module: account_payment
 #: model_terms:ir.ui.view,arch_db:account_payment.portal_invoice_payment
@@ -146,6 +146,8 @@ msgid ""
 "A payment has already been made on this invoice, please make sure to not pay"
 " twice."
 msgstr ""
+"Bu fatura için zaten bir ödeme yapılmış. Lütfen ikinci kez ödeme "
+"yapmadığınızdan emin olun."
 
 #. module: account_payment
 #. odoo-python
@@ -265,7 +267,7 @@ msgstr ""
 #. module: account_payment
 #: model:ir.model.fields,field_description:account_payment.field_payment_link_wizard__epd_info
 msgid "Early Payment Discount Information"
-msgstr ""
+msgstr "Erken Ödeme İskontosu Bilgisi"
 
 #. module: account_payment
 #: model_terms:ir.ui.view,arch_db:account_payment.portal_invoice_payment
@@ -424,7 +426,7 @@ msgstr "Online Ödemeler"
 #. odoo-python
 #: code:addons/account_payment/wizards/payment_link_wizard.py:0
 msgid "Online payment option is not enabled in Configuration."
-msgstr ""
+msgstr "Yapılandırmada çevrim içi ödeme seçeneği etkinleştirilmemiş."
 
 #. module: account_payment
 #. odoo-python
@@ -667,13 +669,13 @@ msgstr "İlgili iade ödemelerinin kaynak ödemesi"
 #. odoo-python
 #: code:addons/account_payment/models/account_move.py:0
 msgid "There are pending transactions for this invoice."
-msgstr ""
+msgstr "Bu fatura için bekleyen işlemler var."
 
 #. module: account_payment
 #. odoo-python
 #: code:addons/account_payment/models/account_move.py:0
 msgid "There is no amount to be paid."
-msgstr ""
+msgstr "Ödenecek herhangi bir tutar yok."
 
 #. module: account_payment
 #: model_terms:ir.ui.view,arch_db:account_payment.portal_invoice_error
@@ -703,7 +705,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/account_payment/models/account_move.py:0
 msgid "This invoice cannot be paid online."
-msgstr ""
+msgstr "Bu fatura çevrim içi ödenemez."
 
 #. module: account_payment
 #. odoo-python
@@ -715,13 +717,13 @@ msgstr "Bu fatura zaten ödendi."
 #. odoo-python
 #: code:addons/account_payment/models/account_move.py:0
 msgid "This invoice isn't posted."
-msgstr ""
+msgstr "Bu fatura muhasebeleştirilmemiştir"
 
 #. module: account_payment
 #. odoo-python
 #: code:addons/account_payment/models/account_move.py:0
 msgid "This is not an outgoing invoice."
-msgstr ""
+msgstr "Bu bir giden fatura değildir."
 
 #. module: account_payment
 #: model:ir.model.fields,field_description:account_payment.field_account_bank_statement_line__transaction_count

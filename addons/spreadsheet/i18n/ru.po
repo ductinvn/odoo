@@ -4777,7 +4777,7 @@ msgstr "Локализация"
 #. odoo-javascript
 #: code:addons/spreadsheet/static/src/o_spreadsheet/o_spreadsheet.xml:0
 msgid "Logarithmic"
-msgstr "Логарифмическая шкала"
+msgstr "Логарифмические"
 
 #. module: spreadsheet
 #. odoo-javascript
@@ -6742,7 +6742,7 @@ msgstr "Данные электронной таблицы"
 #. module: spreadsheet
 #: model:ir.model.fields,field_description:spreadsheet.field_spreadsheet_mixin__spreadsheet_file_name
 msgid "Spreadsheet File Name"
-msgstr ""
+msgstr "Имя файла таблицы"
 
 #. module: spreadsheet
 #: model:ir.model.fields,field_description:spreadsheet.field_spreadsheet_mixin__spreadsheet_binary_data
@@ -7639,8 +7639,8 @@ msgid ""
 "The date for which to determine the week number. Must be a reference to a "
 "cell containing a date, a function returning a date type, or a number."
 msgstr ""
-"Дата, для которой необходимо определить номер недели. Должна быть ссылкой на"
-" ячейку, содержащую дату, функцией, возвращающей тип даты, или числом."
+"Дата, для которой нужно определить номер недели. Должна быть ссылкой на "
+"ячейку с датой, функцией, возвращающей значение типа «дата», или числом."
 
 #. module: spreadsheet
 #. odoo-javascript
