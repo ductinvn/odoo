@@ -841,6 +841,10 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
         self.assertAlmostEqual(
             invoice.amount_total, self.pos_order_pos1.amount_total, places=2, msg="Invoice not correct")
 
+        # It should no be possible to make the invoice draft
+        with self.assertRaises(UserError):
+            invoice.button_draft()
+
         # I close the session to generate the journal entries
         current_session.action_pos_session_closing_control()
 
@@ -2705,6 +2709,8 @@ class TestPointOfSaleFlow(TestPointOfSaleCommon):
         self.assertEqual(order.pos_reference, f'Order {session_id.id:05d}-003-0001', "Should find the correct order")
         order = self.env['pos.order'].search([('tracking_number', 'ilike', '03')])
         self.assertEqual(len(order), 0, "Should not find any order with the tracking number")
+        with self.assertRaises(UserError):
+            self.env['pos.order'].search([('tracking_number', 'ilike', '1234')])
 
     def test_refunded_order_has_uuid(self):
         """ Test that a refunded order has a uuid generated. """
