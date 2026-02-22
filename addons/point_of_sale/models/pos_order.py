@@ -791,11 +791,14 @@ class PosOrder(models.Model):
             'fiscal_position_id': self.fiscal_position_id.id,
             'invoice_line_ids': self._prepare_invoice_lines(),
             'invoice_payment_term_id': False,
-            'invoice_cash_rounding_id': self.config_id.rounding_method.id,
         }
         if self.refunded_order_id.account_move:
             vals['ref'] = _('Reversal of: %s', self.refunded_order_id.account_move.name)
             vals['reversed_entry_id'] = self.refunded_order_id.account_move.id
+
+        if self.config_id.cash_rounding and (not self.config_id.only_round_cash_method or any(p.payment_method_id.is_cash_count for p in self.payment_ids)):
+            vals['invoice_cash_rounding_id'] = self.config_id.rounding_method.id
+
         if self.floating_order_name:
             vals.update({'narration': self.floating_order_name})
         return vals
@@ -897,7 +900,7 @@ class PosOrder(models.Model):
                 ('product_id.categ_id.property_valuation', '=', 'real_time')
             ])
             for stock_move in stock_moves:
-                expense_account = stock_move.product_id._get_product_accounts()['expense']
+                expense_account = stock_move.with_company(stock_move.company_id).product_id._get_product_accounts()['expense']
                 stock_output_account = stock_move.product_id.categ_id.property_stock_account_output_categ_id
                 balance = -sum(stock_move.stock_valuation_layer_ids.mapped('value'))
                 aml_vals_list_per_nature['stock'].append({
