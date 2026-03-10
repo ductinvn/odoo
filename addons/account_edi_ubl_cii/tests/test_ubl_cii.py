@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
+
 from lxml import etree
 from unittest.mock import patch
 from odoo import fields, Command
@@ -44,6 +45,11 @@ class TestAccountEdiUblCii(TestUblCiiCommon):
             'cbc': "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
             'cac': "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
         }
+
+    def setUp(self):
+        self.addCleanup(self.registry.reset_changes)
+        self.addCleanup(self.registry.clear_all_caches)
+        super().setUp()
 
     def test_export_import_product(self):
         products = self.env['product.product'].create([{
@@ -738,13 +744,29 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
         self.assertTrue(bill)
 
         # Ensure the created move has 2 attachments: the original XML and a generated PDF
-        self.assertEqual(len(bill.attachment_ids), 2)
+        self.assertTrue(bill.ubl_cii_xml_id)  # Original XML
+        self.assertEqual(len(bill.attachment_ids), 1)  # Generated PDF
         self.assertTrue(any('pdf' in attachment.mimetype for attachment in bill.attachment_ids))
 
     def test_import_and_group_lines_by_tax(self):
         """
         Test the group/ungroup lines action on account.move
         """
+
+        def create_bill(file_path):
+            file_path = f"{self.test_module}/tests/test_files/{file_path}"
+            with file_open(file_path, 'rb') as file:
+                xml_attachment = self.env['ir.attachment'].create({
+                    'mimetype': 'application/xml',
+                    'name': 'bis3_bill_group_by_tax.xml',
+                    'raw': file.read(),
+                })
+            return self._import_as_attachment_on(
+                attachment=xml_attachment,
+                journal=self.company_data['default_journal_purchase'],
+            )
+
+        # Datas
         self.env.ref('base.EUR').active = True
         tax_16 = self.env["account.tax"].create({
             'name': '16 %',
@@ -759,19 +781,7 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
             'amount': 21.0,
         })
 
-        file_path = "bis3_bill_group_by_tax.xml"
-        file_path = f"{self.test_module}/tests/test_files/{file_path}"
-        with file_open(file_path, 'rb') as file:
-            xml_attachment = self.env['ir.attachment'].create({
-                'mimetype': 'application/xml',
-                'name': 'bis3_bill_group_by_tax.xml',
-                'raw': file.read(),
-            })
-        bill = self._import_as_attachment_on(attachment=xml_attachment, journal=self.company_data["default_journal_purchase"])
-
-        # Should group lines by tax
-        bill.action_group_ungroup_lines_by_tax()
-        self.assertRecordValues(bill.invoice_line_ids, [
+        lines_grouped = [
             {
                 'quantity': 1.0,
                 'price_unit': 600.0,
@@ -786,16 +796,31 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
                 'price_total': 1573.00,
                 'tax_ids': tax_21.ids,
             },
-        ])
-        self.assertRecordValues(bill, [{
+        ]
+        total_values = [{
             'amount_untaxed': 1900.0,
             'amount_tax': 369,
             'amount_total': 2269.00,
-        }])
+        }]
+
+        # Import bill
+        file_path = "bis3_bill_group_by_tax.xml"
+        bill = create_bill(file_path)
+
+        # Group lines by tax and post
+        bill.action_group_ungroup_lines_by_tax()
+        self.assertRecordValues(bill.invoice_line_ids, lines_grouped)
+        self.assertRecordValues(bill, total_values)
+        bill.action_post()
+
+        # Import the bill a second time, should be grouped as last posted bill from this supplier is grouped
+        bill_2 = create_bill(file_path)
+        self.assertRecordValues(bill_2.invoice_line_ids, lines_grouped)
+        self.assertRecordValues(bill_2, total_values)
 
         # Should ungroup lines from xml
-        bill.action_group_ungroup_lines_by_tax()
-        self.assertRecordValues(bill.invoice_line_ids, [
+        bill_2.action_group_ungroup_lines_by_tax()
+        self.assertRecordValues(bill_2.invoice_line_ids, [
             {
                 'quantity': 1.0,
                 'price_unit': 600.0,
@@ -818,11 +843,7 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
                 'tax_ids': tax_21.ids,
             },
         ])
-        self.assertRecordValues(bill, [{
-            'amount_untaxed': 1900.0,
-            'amount_tax': 369,
-            'amount_total': 2269.00,
-        }])
+        self.assertRecordValues(bill_2, total_values)
 
     def test_bank_details_import(self):
         acc_number = '1234567890'
@@ -846,75 +867,53 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
 
     def test_invoice_optional_fields(self):
         """Test that optional invoice and invoice lines custom fields added by the user are exported correctly"""
-        IrModelFields = self.env["ir.model.fields"].with_context(studio=True)
-        model = self.env["ir.model"].search([("model", "=", "account.move")])
+        model_id = self.env["ir.model"]._get_id("account.move")
+        invoice_fields = [
+            ("x_studio_peppol_tax_point_date", "date"),
+            ("x_studio_peppol_contract_document_reference_id", "char"),
+            ("x_studio_peppol_despatch_document_reference_id", "char"),
+            ("x_studio_peppol_accounting_cost", "char"),
+            ("x_studio_peppol_project_reference_id", "char"),
+            ("x_studio_peppol_order_reference_id", "char"),
+            ("x_studio_peppol_invoice_period_start_date", "date"),
+            ("x_studio_peppol_invoice_period_end_date", "date"),
+        ]
 
-        IrModelFields.create([
-            {
-                "ttype": "date",
-                "model_id": model.id,
-                "name": "x_studio_peppol_tax_point_date",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_contract_document_reference_id",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_despatch_document_reference_id",
-            },
-            {
-                "ttype": "monetary",
-                "model_id": model.id,
-                "name": "x_studio_peppol_accounting_cost",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_project_reference_id",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_order_reference_id",
-            },
-            {
-                "ttype": "date",
-                "model_id": model.id,
-                "name": "x_studio_peppol_invoice_period_start_date",
-            },
-            {
-                "ttype": "date",
-                "model_id": model.id,
-                "name": "x_studio_peppol_invoice_period_end_date",
-            },
+        self.env["ir.model.fields"].create([{
+                "name": name,
+                "model": "account.move",
+                "model_id": model_id,
+                "ttype": ttype,
+                "state": "manual",
+            }
+            for name, ttype in invoice_fields
         ])
 
-        model = self.env["ir.model"].search([("model", "=", "account.move.line")])
+        model_id = self.env["ir.model"]._get_id("account.move.line")
+        invoice_line_fields = [
+            ("x_studio_peppol_order_line_reference_id", "char"),
+            ("x_studio_peppol_buyers_item_id", "char"),
+        ]
 
-        IrModelFields.create([
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_order_line_reference_id",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_buyers_item_id",
-            },
+        self.env["ir.model.fields"].create([{
+                "name": name,
+                "model": "account.move.line",
+                "model_id": model_id,
+                "ttype": ttype,
+                "state": "manual",
+            }
+            for name, ttype in invoice_line_fields
         ])
 
         invoice = self.env['account.move'].create({
             'partner_id': self.partner_a.id,
             'move_type': 'out_invoice',
-            'invoice_line_ids': [Command.create({
-                'product_id': self.product_a.id,
-                'x_studio_peppol_order_line_reference_id': "order_line1-1234",
-                'x_studio_peppol_buyers_item_id': "item1-1234",
-            }),
+            'invoice_line_ids': [
+                Command.create({
+                    'product_id': self.product_a.id,
+                    'x_studio_peppol_order_line_reference_id': "order_line1-1234",
+                    'x_studio_peppol_buyers_item_id': "item1-1234",
+                }),
                 Command.create({
                     'product_id': self.product_a.id,
                     'x_studio_peppol_order_line_reference_id': "order_line2-1234",
@@ -970,60 +969,42 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
 
     def test_credit_note_optional_fields(self):
         """Test that optional credit note and credit note lines custom fields added by the user are exported correctly"""
-        IrModelFields = self.env["ir.model.fields"].with_context(studio=True)
-        model = self.env["ir.model"].search([("model", "=", "account.move")])
+        model_id = self.env["ir.model"]._get_id("account.move")
 
-        IrModelFields.create([
-            {
-                "ttype": "date",
-                "model_id": model.id,
-                "name": "x_studio_peppol_tax_point_date",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_contract_document_reference_id",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_despatch_document_reference_id",
-            },
-            {
-                "ttype": "monetary",
-                "model_id": model.id,
-                "name": "x_studio_peppol_accounting_cost",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_order_reference_id",
-            },
-            {
-                "ttype": "date",
-                "model_id": model.id,
-                "name": "x_studio_peppol_invoice_period_start_date",
-            },
-            {
-                "ttype": "date",
-                "model_id": model.id,
-                "name": "x_studio_peppol_invoice_period_end_date",
-            },
+        credit_note_fields = [
+            ("x_studio_peppol_tax_point_date", "date"),
+            ("x_studio_peppol_contract_document_reference_id", "char"),
+            ("x_studio_peppol_despatch_document_reference_id", "char"),
+            ("x_studio_peppol_accounting_cost", "char"),
+            ("x_studio_peppol_order_reference_id", "char"),
+            ("x_studio_peppol_invoice_period_start_date", "date"),
+            ("x_studio_peppol_invoice_period_end_date", "date"),
+        ]
+
+        self.env["ir.model.fields"].create([{
+                "name": name,
+                "model": "account.move",
+                "model_id": model_id,
+                "ttype": ttype,
+                "state": "manual",
+            }
+            for name, ttype in credit_note_fields
         ])
 
-        model = self.env["ir.model"].search([("model", "=", "account.move.line")])
+        model_id = self.env["ir.model"]._get_id("account.move.line")
+        credit_note_line_fields = [
+            ("x_studio_peppol_order_line_reference_id", "char"),
+            ("x_studio_peppol_buyers_item_id", "char"),
+        ]
 
-        IrModelFields.create([
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_order_line_reference_id",
-            },
-            {
-                "ttype": "char",
-                "model_id": model.id,
-                "name": "x_studio_peppol_buyers_item_id",
-            },
+        self.env["ir.model.fields"].create([{
+                "name": name,
+                "model": "account.move",
+                "model_id": model_id,
+                "ttype": ttype,
+                "state": "manual",
+            }
+            for name, ttype in credit_note_line_fields
         ])
 
         invoice = self.env['account.move'].create({
@@ -1082,3 +1063,61 @@ comment-->1000.0</TaxExclusiveAmount></xpath>"""
         buyers_item_id = xml_tree.findall('.//cac:CreditNoteLine/cac:Item/cac:BuyersItemIdentification/cbc:ID', self.ubl_namespaces)
         self.assertEqual(buyers_item_id[0].text, 'item1-1234')
         self.assertEqual(buyers_item_id[1].text, 'item2-1234')
+
+    def test_payment_terms_immediate_in_cii_xml(self):
+        self.partner_a.invoice_edi_format = 'facturx'
+        invoice = self._create_invoice_one_line(
+            product_id=self.product_a,
+            partner_id=self.partner_a,
+            invoice_date="2025-12-01",
+            post=True,
+        )
+
+        xml_tree = etree.fromstring(self.env['account.edi.xml.cii']._export_invoice(invoice)[0])
+        description = xml_tree.find('.//ram:SpecifiedTradePaymentTerms/ram:Description', self.namespaces)
+        due_date = xml_tree.find('.//ram:SpecifiedTradePaymentTerms/ram:DueDateDateTime/udt:DateTimeString',
+                                 self.namespaces)
+        self.assertEqual(description.text, 'Immediate Payment')
+        self.assertEqual(due_date.text, '20251201')
+
+    def test_payment_terms_early_payment_discount_in_cii_xml(self):
+        pay_terms = self.env['account.payment.term'].create({
+            'name': '3% Before 15 Days',
+            'note': 'Payment terms: 3% Before 15 Days',
+            'early_discount': True,
+            'discount_days': 15,
+            'discount_percentage': 3.0,
+            'early_pay_discount_computation': 'mixed',
+            'line_ids': [Command.create({
+                'value': 'percent',
+                'value_amount': 100.0,
+                'nb_days': 30,
+            })],
+        })
+        partner = self.partner_a
+        partner.invoice_edi_format = 'facturx'
+        partner.property_payment_term_id = pay_terms.id
+        partner.property_supplier_payment_term_id = pay_terms.id
+
+        invoice = self._create_invoice_one_line(
+            product_id=self.product_a,
+            partner_id=self.partner_a,
+            invoice_date="2025-12-01",
+            post=True,
+        )
+
+        xml_tree = etree.fromstring(self.env['account.edi.xml.cii']._export_invoice(invoice)[0])
+        description = xml_tree.find('.//ram:SpecifiedTradePaymentTerms/ram:Description', self.namespaces)
+        due_date = xml_tree.find('.//ram:SpecifiedTradePaymentTerms/ram:DueDateDateTime/udt:DateTimeString',
+                                 self.namespaces)
+        days = xml_tree.find(
+            './/ram:SpecifiedTradePaymentTerms/ram:ApplicableTradePaymentDiscountTerms/ram:BasisPeriodMeasure',
+            self.namespaces)
+        percent = xml_tree.find(
+            './/ram:SpecifiedTradePaymentTerms/ram:ApplicableTradePaymentDiscountTerms/ram:CalculationPercent',
+            self.namespaces)
+
+        self.assertEqual(description.text, '3% Before 15 Days')
+        self.assertEqual(due_date.text, '20251231')
+        self.assertEqual(days.text, '15')
+        self.assertEqual(percent.text, '3.0')

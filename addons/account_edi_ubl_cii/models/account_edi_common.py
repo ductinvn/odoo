@@ -427,7 +427,7 @@ class AccountEdiCommon(models.AbstractModel):
 
         # Update the invoice.
         invoice.move_type = move_type
-        with invoice.with_context(disable_onchange_name_predictive=True)._get_edi_creation() as invoice:
+        with invoice._get_edi_creation() as invoice:
             logs = self._import_fill_invoice(invoice, tree, qty_factor)
         if invoice:
             body = Markup("<strong>%s</strong>") % \
@@ -443,8 +443,11 @@ class AccountEdiCommon(models.AbstractModel):
         # For UBL, we should override the computed tax amount if it is less than 0.05 different of the one in the xml.
         # In order to support use case where the tax total is adapted for rounding purpose.
         # This has to be done after the first import in order to let Odoo compute the taxes before overriding if needed.
-        with invoice.with_context(disable_onchange_name_predictive=True)._get_edi_creation() as invoice:
+        with invoice._get_edi_creation() as invoice:
             self._correct_invoice_tax_amount(tree, invoice)
+
+        # Set XML as ubl_cii_xml_file (XML used to import)
+        file_data['attachment'].res_field = 'ubl_cii_xml_file'
 
         attachments = self._import_attachments(invoice, tree)
         if attachments:
@@ -455,6 +458,9 @@ class AccountEdiCommon(models.AbstractModel):
     def _import_attachments(self, invoice, tree):
         # Import the embedded documents in the xml if some are found
         attachments = self.env['ir.attachment']
+        if invoice.message_main_attachment_id:
+            # Invoice look like it was already imported, don't import attachments again
+            return attachments
         additional_docs = tree.findall('./{*}AdditionalDocumentReference')
         for document in additional_docs:
             attachment_name = document.find('{*}ID')

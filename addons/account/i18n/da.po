@@ -27,8 +27,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 18:37+0000\n"
-"PO-Revision-Date: 2026-02-21 18:01+0000\n"
+"POT-Creation-Date: 2026-02-27 18:36+0000\n"
+"PO-Revision-Date: 2026-03-07 18:00+0000\n"
 "Last-Translator: Weblate <noreply-mt-weblate@weblate.org>\n"
 "Language-Team: Danish <https://translate.odoo.com/projects/odoo-18/account/"
 "da/>\n"
@@ -37,7 +37,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.14.3\n"
+"X-Generator: Weblate 5.16.1\n"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_journal__type
@@ -91,6 +91,8 @@ msgid ""
 "\n"
 "Please contact your administrator."
 msgstr ""
+"\n"
+"Kontakt venligst din administrator."
 
 #. module: account
 #. odoo-python
@@ -3812,6 +3814,12 @@ msgstr "Bank og kasse"
 #: model_terms:ir.ui.view,arch_db:account.report_statement
 msgid "Bank of odoo"
 msgstr "Odoo bank"
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid "Bank settings"
+msgstr "Bankindstillinger"
 
 #. module: account
 #: model:ir.model,name:account.model_account_setup_bank_manual_config
@@ -15593,6 +15601,16 @@ msgid ""
 msgstr "Bankkontoen for en bankjournal skal tilhøre den samme virksomhed (%s)."
 
 #. module: account
+#. odoo-python
+#: code:addons/account/models/account_move.py:0
+msgid ""
+"The bank account of your company is not trusted. Please ask an admin or "
+"someone with approval rights to check it."
+msgstr ""
+"Din virksomheds bankkonto er ikke godkendt. Bed en administrator eller en "
+"person med godkendelsesrettigheder om at kontrollere den."
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_move_line__statement_id
 msgid "The bank statement used for bank reconciliation"
 msgstr "Kontoudtoget anvendes til bankudlignin"
@@ -15666,9 +15684,14 @@ msgstr "Forretningspartneren har opdateret alle tilhørende bogføringer."
 #. odoo-python
 #: code:addons/account/models/account_move.py:0
 msgid ""
-"The company bank account linked to this invoice is not trusted, please "
-"double-check and trust it before confirming, or remove it"
+"The company bank account (%(account_number)s) linked to this invoice is not "
+"trusted. Go to the Bank Settings, double-check that it is yours or correct "
+"the number, and click on Send Money to trust it."
 msgstr ""
+"Virksomhedens bankkonto (%(account_number)s), som er knyttet til denne "
+"faktura, er ikke godkendt. Gå til bankindstillingerne, kontrollér, at det er "
+"din konto, eller ret kontonummeret, og klik på \"Send penge\" for at "
+"godkende den."
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_tax_repartition_line__company_id
@@ -16319,6 +16342,8 @@ msgid ""
 "The scheduled action 'Send Invoices automatically' is archived. You won't be "
 "able to send invoices in batch."
 msgstr ""
+"Den planlagte handling \"Send fakturaer automatisk\" er blevet arkiveret. Du "
+"kan ikke længere sende flere fakturaer på en gang."
 
 #. module: account
 #. odoo-python
