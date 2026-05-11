@@ -285,7 +285,7 @@ class AccountEdiCommon(models.AbstractModel):
 
         cocontractant_note = self._get_belgian_cocontractant_note(customer, supplier)
         if cocontractant_note:
-            return create_dict(tax_category_code='AE', tax_exemption_reason_code='VATEX-EU-AE - Reverse charge', tax_exemption_reason=cocontractant_note)
+            return create_dict(tax_category_code='AE', tax_exemption_reason_code='VATEX-EU-AE', tax_exemption_reason=cocontractant_note)
 
         if supplier.country_id == customer.country_id:
             if not tax or tax.amount == 0:
@@ -935,6 +935,7 @@ class AccountEdiCommon(models.AbstractModel):
                 ('amount_type', '=', 'percent'),
                 ('type_tax_use', '=', tax_type),
                 ('amount', '=', amount),
+                ('country_id', '=', record.tax_country_id.id),
             ]
             tax = self.env['account.tax']
             if hasattr(record, '_get_specific_tax'):
