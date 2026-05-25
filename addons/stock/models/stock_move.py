@@ -722,6 +722,12 @@ Please change the quantity done or the rounding precision of your unit of measur
         if 'quantity' in vals:
             if any(move.state == 'cancel' for move in self):
                 raise UserError(_('You cannot change a cancelled stock move, create a new line instead.'))
+            # TODO The order of the calls is based on the orders of the keys in vals, which is the order of changes made
+            # in the UI. This should be refactored to avoid relying on the order of the keys in vals.
+            if 'lot_ids' in vals:
+                # If lot_ids is changed after changing the quantity, we need to ensure that the lot_ids changed is process before
+                # processing the quantity change, to avoid unexpected lot_ids that will be re-added later in the process.
+                vals = dict(sorted(vals.items()))
         if 'product_uom' in vals and any(move.state == 'done' for move in self):
             raise UserError(_('You cannot change the UoM for a stock move that has been set to \'Done\'.'))
         if 'product_uom_qty' in vals:
@@ -2031,11 +2037,17 @@ Please change the quantity done or the rounding precision of your unit of measur
                         'procure_method': 'make_to_stock',
                         'move_orig_ids': [Command.unlink(move.id)]
                     })
+        if not self.env.context.get('skip_cancel_activity'):
+            # log an activity on the non-cancelled origin to warn the user that some actions might be required
+            moves_to_cancel._log_cancel_activity()
         moves_to_cancel.write({
             'move_orig_ids': [(5, 0, 0)],
             'procure_method': 'make_to_stock',
         })
         return True
+
+    def _log_cancel_activity(self):
+        return
 
     def _skip_push(self):
         return self.is_inventory or (
