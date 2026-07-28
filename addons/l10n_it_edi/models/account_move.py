@@ -178,7 +178,7 @@ class AccountMove(models.Model):
         # EXTENDS 'account'
         super()._compute_show_reset_to_draft_button()
         for move in self:
-            move.show_reset_to_draft_button = not move.l10n_it_edi_transaction and move.show_reset_to_draft_button
+            move.show_reset_to_draft_button = not (move.is_sale_document() and move.l10n_it_edi_transaction) and move.show_reset_to_draft_button
 
     def _get_edi_decoder(self, file_data, new=False):
         # EXTENDS 'account'
@@ -1040,7 +1040,7 @@ class AccountMove(models.Model):
             return False
 
         # Create the attachment, an empty move, then attach the two and commit
-        move = self.with_company(proxy_user.company_id).create({})
+        move = self.with_company(proxy_user.company_id).create({'move_type': 'in_invoice'})
         attachment = Attachment.create({
             'name': filename,
             'raw': decrypted_content,
@@ -1511,7 +1511,7 @@ class AccountMove(models.Model):
                 tax_scope = 'service' if move_line.product_id.type == 'service' else 'consu'
                 extra_domain += [('tax_scope', 'in', [tax_scope, False])]
             if tax := self._l10n_it_edi_search_tax_for_import(company, percentage, extra_domain, l10n_it_exempt_reason=l10n_it_exempt_reason):
-                move_line.tax_ids |= tax
+                move_line.tax_ids |= self.fiscal_position_id.map_tax(tax)
             else:
                 message = Markup("<br/>").join((
                     _("Tax not found for line with description '%s'", move_line.name),
@@ -1605,6 +1605,10 @@ class AccountMove(models.Model):
             }
 
         errors = {}
+        if pdf_moves := self.filtered(lambda move: move.invoice_pdf_report_id and not move.l10n_it_edi_attachment_id):
+            message = _("Please delete the PDF attachment before sending to the SDI. Odoo will regenerate the PDF, making sure everything is consistent with the XML.")
+            errors['l10n_it_edi_pdf_already_generated'] = build_error(message=message, records=pdf_moves)
+
         if moves := self.filtered(lambda move: move.l10n_it_edi_is_self_invoice and move._l10n_it_edi_services_or_goods() == 'both'):
             errors['l10n_it_edi_move_rc_mixed_product_types'] = build_error(
                 message=_("Cannot apply Reverse Charge to bills which contains both services and goods."),

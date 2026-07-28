@@ -1,4 +1,3 @@
-from datetime import datetime
 from markupsafe import Markup
 from lxml import etree
 
@@ -244,7 +243,7 @@ class AccountEdiCommon(models.AbstractModel):
     def _get_belgian_cocontractant_note(self, customer, supplier):
 
         if (invoice := self.env.context.get('tax_exemption_reason_invoice')) and customer.country_id.code == 'BE' and supplier.country_id == customer.country_id:
-            co_contractant = self.env['account.chart.template'].ref('fiscal_position_template_4', raise_if_not_found=False)
+            co_contractant = self.env['account.chart.template'].with_company(invoice.company_id).ref('fiscal_position_template_4', raise_if_not_found=False)
             if co_contractant and invoice.fiscal_position_id == co_contractant:
                 note = html2plaintext(invoice.fiscal_position_id.note) if invoice.fiscal_position_id.note else ''
                 return note or COCONTRACTANT_DEFAULT_NOTE
@@ -292,15 +291,12 @@ class AccountEdiCommon(models.AbstractModel):
             if customer.zip[:2] in ('51', '52'):
                 return create_dict(tax_category_code='M')  # Ceuta & Mellila
 
-        cocontractant_note = self._get_belgian_cocontractant_note(customer, supplier)
-        if cocontractant_note:
-            if not tax.amount:
-                return create_dict(
-                    tax_category_code='AE',
-                    tax_exemption_reason_code='VATEX-EU-AE',
-                    tax_exemption_reason=cocontractant_note
-                )
-            raise UserError(_("Invalid Tax Setup for Co-Contractor. Please apply the standard co-contractor tax, or ensure your custom tax uses a tax amount of 0"))
+        if cocontractant_note := not tax.amount and self._get_belgian_cocontractant_note(customer, supplier):
+            return create_dict(
+                tax_category_code='AE',
+                tax_exemption_reason_code='VATEX-EU-AE',
+                tax_exemption_reason=cocontractant_note
+            )
 
         if supplier.country_id == customer.country_id:
             if not tax or tax.amount == 0:
@@ -696,29 +692,11 @@ class AccountEdiCommon(models.AbstractModel):
         return lines_values, logs
 
     def _retrieve_invoice_line_vals(self, tree, document_type=False, qty_factor=1):
-        # Start and End date (enterprise fields)
-        xpath_dict = self._get_invoice_line_xpaths(document_type, qty_factor)
-        deferred_values = {}
-        start_date = end_date = None
-        if self.env['account.move.line']._fields.get('deferred_start_date'):
-            start_date_node = tree.find(xpath_dict['deferred_start_date'])
-            end_date_node = tree.find(xpath_dict['deferred_end_date'])
-            if start_date_node is not None and end_date_node is not None:  # there is a constraint forcing none or the two to be set
-                start_date = datetime.strptime(start_date_node.text.strip(), xpath_dict['date_format'])
-                end_date = datetime.strptime(end_date_node.text.strip(), xpath_dict['date_format'])
-            deferred_values = {
-                'deferred_start_date': start_date,
-                'deferred_end_date': end_date,
-            }
-
         line_vals = self._retrieve_line_vals(tree, document_type, qty_factor)
         if not line_vals.get('price_subtotal'):
             return None
 
-        return {
-            **line_vals,
-            **deferred_values,
-        }
+        return line_vals
 
     @api.model
     def _retrieve_rebate_val(self, tree, xpath_dict, quantity):
@@ -753,6 +731,13 @@ class AccountEdiCommon(models.AbstractModel):
             else:
                 discount_amount += amount
         return discount_amount, charges
+
+    def _get_basis_qty(self, tree, xpath_dict):
+        """ Return the base quantity used to derive the unit price from PriceAmount.
+        The standard UBL/CII divides PriceAmount by BaseQuantity to obtain the unit price upon
+        import.
+        """
+        return float(self._find_value(xpath_dict['basis_qty'], tree) or 1) or 1.0
 
     def _retrieve_line_vals(self, tree, document_type=False, qty_factor=1):
         """
@@ -796,7 +781,7 @@ class AccountEdiCommon(models.AbstractModel):
         """
         xpath_dict = self._get_line_xpaths(document_type, qty_factor)
         # basis_qty (optional)
-        basis_qty = float(self._find_value(xpath_dict['basis_qty'], tree) or 1) or 1.0
+        basis_qty = self._get_basis_qty(tree, xpath_dict)
 
         # gross_price_unit (optional)
         gross_price_unit = None
